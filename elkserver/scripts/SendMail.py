@@ -1,4 +1,11 @@
 #!/usr/bin/env python
+#
+# Part of RedELK
+# Script to email events as alarms
+#
+# Author: Outflank B.V. / Mark Bergman / @xychix
+#
+
 import argparse
 import csv, hashlib
 import requests
@@ -22,6 +29,7 @@ def SendMail(to, mail, subject, fromaddr=config.fromAddr, attachment = "None", s
     msg['Subject'] = subject
     msg['From'] = formataddr((str(Header(fromaddr, 'utf-8')), fromaddr))
     msg['To'] = to
+    msg['Date'] = formatdate()
     #DONE PREPARATION, BUILD MAIL
     msg.attach(MIMEText(html,'html'))
     if attachment != "None":
