@@ -101,6 +101,8 @@ venv.bak/
 # mkdocs documentation
 /site
 
+.vscode/
+
 # mypy
 .mypy_cache/
 elkserver/scripts/upload_redelkz.sh
@@ -118,9 +120,13 @@ elkserver.tgz
 elkserver/VERSION
 elkserver/mounts/redelk-ssh/*
 elkserver/mounts/logstash-config/*
+elkserver/mounts/redelk-logs/*
 elkserver/mounts/certs/*
 elkserver/mounts/certbot/*
+elkserver/mounts/jupyter-workbooks/redelk_passwords.py
+elkserver/redelk_passwords.cfg
 elkserver/redelk-install.log
+elkserver/docker-compose.yml
 redelk-inintialsetup.log
 redirs.tgz
 redirs/VERSION

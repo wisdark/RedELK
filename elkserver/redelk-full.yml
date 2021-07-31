@@ -7,7 +7,6 @@
 # - Lorenzo Bernardi (@fastlorenzo)
 #
 
-
 version: "3.3"
 
 networks:
@@ -28,17 +27,19 @@ services:
     image: ${REDELKREPO}/redelk-elasticsearch:${REDELKVERSION}
     networks:
       - net
+    ports:
+      - "127.0.0.1:9200:9200"
     expose:
       - "9200"
     volumes:
       - es_data:/usr/share/elasticsearch/data
       - ./mounts/certs:${CERTS_DIR_ES}
+      - ./mounts/elasticsearch-config/jvm.options.d:/usr/share/elasticsearch/config/jvm.options.d
     environment:
       - discovery.type=single-node
       - cluster.name=redelk-cluster
       - node.name=redelk-node1
       - bootstrap.memory_lock=true
-      - ES_JAVA_OPTS=${ES_JAVA_OPTS}
       - xpack.license.self_generated.type=basic
       - xpack.security.enabled=true
       - xpack.security.http.ssl.enabled=true
@@ -61,7 +62,16 @@ services:
       - CREDS_redelk_ingest=${CREDS_redelk_ingest}
       - CREDS_redelk=${CREDS_redelk}
       - ES_URL=${ES_URL}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
 
   logstash:
     container_name: redelk-logstash
@@ -99,6 +109,11 @@ services:
       - XPACK_MONITORING_ELASTICSEARCH_PASSWORD=${CREDS_logstash_system}
       - XPACK_MONITORING_ELASTICSEARCH_SSL_CERTIFICATE_AUTHORITY=${CERTS_LOGSTASH_OUTPUT_CA}
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
     depends_on:
       - elasticsearch
 
@@ -124,6 +139,11 @@ services:
       - SERVER_SSL_KEY=${CERTS_DIR_KBN}/redelk-kibana/redelk-kibana.key
       - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=${KBN_XPACK_ENCRYPTEDSAVEDOBJECTS}
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
     depends_on:
       - logstash
 
@@ -148,14 +168,31 @@ services:
       - TLS_NGINX_CA_PATH=${TLS_NGINX_CA_PATH}
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & /docker-entrypoint.d/20-envsubst-on-templates.sh; nginx -g \"daemon off;\"'"
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
+    depends_on:
+      - jupyter
+      - kibana
+      - bloodhound
 
   certbot:
+    container_name: redelk-certbot
     image: certbot/certbot
+    networks:
+      - net
     volumes:
       - ./mounts/certbot/conf:/etc/letsencrypt
       - ./mounts/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
     depends_on:
       - nginx
 
@@ -173,6 +210,11 @@ services:
     environment:
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
     depends_on:
       - nginx
 
@@ -186,25 +228,27 @@ services:
     volumes:
       - ./mounts/jupyter-workbooks:/home/jovyan/work
     restart: always
-    depends_on:
-      - base
 
   bloodhound:
     container_name: redelk-bloodhound
-    image: specterops/bloodhound-neo4j
+    image: neo4j:4.2
     networks:
       - net
     volumes:
-      - bloodhound_data:/var/lib/neo4j
+      - bloodhound_data:/data
     ports:
+      - "7474:7474"
       - "7687:7687"
-    expose:
-      - "7474"
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH}
       - NEO4J_dbms_memory_heap_initial__size=${NEO4J_dbms_memory_heap_initial__size}
       - NEO4J_dbms_memory_heap_max__size=${NEO4J_dbms_memory_heap_max__size}
       - NEO4J_dbms_memory_pagecache_size=${NEO4J_dbms_memory_pagecache_size}
     restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${LOG_MAX_SIZE}"
+        max-file: "${LOG_MAX_FILE}"
     depends_on:
       - jupyter
