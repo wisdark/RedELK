@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Part of RedELK
-# Script to install RedELK on Cobalt Strike teamservers
+# Script to install RedELK connector for c2 servers
 #
 # Author: Outflank B.V. / Marc Smeets
 #
@@ -53,7 +53,7 @@ echo "   |_| \__\___| \____||_____||_____||_|\_\\"
 echo ""
 echo ""
 echo ""   
-echo "This script will install and configure necessary components for RedELK on Cobalt Strike teamservers"
+echo "This script will install and configure necessary components for RedELK on C2 server"
 echo ""
 echo ""
 
@@ -130,11 +130,18 @@ if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not make backup (Error Code: $ERROR)."
 fi
 
-echo "[*] Copying new config file" | tee -a $LOGFILE
-cp ./filebeat/filebeat_cobaltstrike.yml /etc/filebeat/filebeat.yml >> $LOGFILE 2>&1
+echo "[*] Copying new main config file" | tee -a $LOGFILE
+cp ./filebeat/filebeat_redelk_main.yml /etc/filebeat/filebeat.yml >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not copy filebeat config (Error Code: $ERROR)."
+fi
+
+echo "[*] Copying c2 specific config files" | tee -a $LOGFILE
+cp -r ./filebeat/inputs.d /etc/filebeat/ >> $LOGFILE 2>&1
+ERROR=$?
+if [ $ERROR -ne 0 ]; then
+    echoerror "[X] Could not copy c2 specific config files (Error Code: $ERROR)."
 fi
 
 echo "[*] Copying ca file" | tee -a $LOGFILE
@@ -144,18 +151,18 @@ if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not copy ca file (Error Code: $ERROR)."
 fi
 
-echo "[*] Altering hostname field in filebeat config" | tee -a $LOGFILE
+echo "[*] Altering hostname field in filebeat configx" | tee -a $LOGFILE
 sed -i s/'@@HOSTNAME@@'/$1/g /etc/filebeat/filebeat.yml  >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not change hostname field in filebeat config (Error Code: $ERROR)."
 fi
 
-echo "[*] Altering attackscenario field in filebeat config" | tee -a $LOGFILE
-sed -i s/'@@ATTACKSCENARIO@@'/$2/g /etc/filebeat/filebeat.yml >> $LOGFILE 2>&1
+echo "[*] Altering attackscenario field in filebeat C2 config files" | tee -a $LOGFILE
+sed -i s/'@@ATTACKSCENARIO@@'/$2/g /etc/filebeat/inputs.d/*.yml >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
-    echoerror "[X] Could not change attackscenario field in filebeat config (Error Code: $ERROR)."
+    echoerror "[X] Could not change attackscenario field in filebeat C2 config files (Error Code: $ERROR)."
 fi
 
 echo "[*] Altering log destination field in filebeat config" | tee -a $LOGFILE
@@ -228,13 +235,11 @@ if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not configure rush (Error Code: $ERROR)."
 fi
 
-echo "[*] Creating crontab for local rscync of cobaltstrike logs" | tee -a $LOGFILE
-if [ ! -f /etc/cron.d/redelk_cobaltstrike ]; then
-    cp ./cron.d/redelk_cobaltstrike /etc/cron.d/redelk_cobaltstrike >> $LOGFILE 2>&1
-fi
+echo "[*] Copying crontab files" | tee -a $LOGFILE
+cp ./cron.d/* /etc/cron.d/ >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
-    echoerror "[X] Could not create crontab for local rsync of cobaltstrike logs (Error Code: $ERROR)."
+    echoerror "[X] Could not copy crontab files (Error Code: $ERROR)."
 fi
 
 echo "[*] Creating RedELK log directory" | tee -a $LOGFILE
@@ -258,7 +263,7 @@ if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not install Python3 pip (Error Code: $ERROR)."
 fi
 
-echo "[*] Installing pip modules for CS .bin parsing" | tee -a $LOGFILE
+echo "[*] Installing pip modules for Cobalt Strike .bin parsing" | tee -a $LOGFILE
 pip3 install javaobj-py3 >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
@@ -283,4 +288,6 @@ fi
 echo ""
 echo "" | tee -a $LOGFILE
 echo "[*] Done with setup of RedELK on teamserver." | tee -a $LOGFILE
+echo "" | tee -a $LOGFILE
+echo "[*] You may want to verify paths in filebeat config files (/etc/filebeat/inputs.d/*)." | tee -a $LOGFILE
 echo "" | tee -a $LOGFILE
