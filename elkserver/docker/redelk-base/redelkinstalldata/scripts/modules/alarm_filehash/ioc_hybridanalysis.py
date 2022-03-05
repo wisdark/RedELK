@@ -11,6 +11,7 @@ Authors:
 import logging
 from datetime import datetime
 import json
+from dateutil import parser
 import requests
 
 from modules.helpers import get_value
@@ -78,11 +79,12 @@ class HA():
         # Search for the file hash
         response = requests.post(url, headers=headers, data=payload)
 
-        if response.status_code == 200: # Hash found
+        if response.status_code == 200: # Hash found 
             json_response = response.json()
         else: # Unexpected result
             self.logger.warning('Error retrieving VT File hash results (HTTP Status code: %d): %s', response.status_code, response.text)
-            json_response = response.text
+            #json_response = response.text
+            json_response = []  # see lione 106 checking for len 0.
 
         return json_response
 
@@ -111,7 +113,7 @@ class HA():
                     for result in ha_result:
                         analysis_start_time = get_value('analysis_start_time', result, None)
                         if analysis_start_time is not None:
-                            analysis_start_time_date = datetime.fromisoformat(analysis_start_time).replace(tzinfo=None)
+                            analysis_start_time_date = parser.isoparse(analysis_start_time).replace(tzinfo=None)
                             first_analysis_time = first_analysis_time if first_analysis_time < analysis_start_time_date else analysis_start_time_date
                     # Found
                     ha_results[md5] = {

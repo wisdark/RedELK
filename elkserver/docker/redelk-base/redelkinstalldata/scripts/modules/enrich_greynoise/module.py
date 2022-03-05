@@ -41,15 +41,9 @@ class Module():
         """ run the enrich module """
         ret = get_initial_alarm_result()
         ret['info'] = info
-        try:
-            hits = self.enrich_greynoise()
-            ret['hits']['hits'] = hits
-            ret['hits']['total'] = len(hits)
-        # pylint: disable=broad-except
-        except Exception as error:
-            stack_trace = traceback.format_exc()
-            ret['error'] = stack_trace
-            self.logger.exception(error)
+        hits = self.enrich_greynoise()
+        ret['hits']['hits'] = hits
+        ret['hits']['total'] = len(hits)
         self.logger.info('finished running module. result: %s hits', ret['hits']['total'])
         return ret
 
@@ -96,6 +90,10 @@ class Module():
         # For each IP, get the greynoise data
         # pylint: disable=invalid-name
         for ip, ip_val in ips.items():
+            # If no ip, skip it
+            if not ip:
+                continue
+
             # Get data from redirtraffic if within interval
             last_es_data = self.get_last_es_data(ip)
 
@@ -150,7 +148,11 @@ class Module():
         #     "message": "IP not observed scanning the internet or contained in RIOT data set."
         # }
         try:
-            gn_data = requests.get(self.greynoise_url + ip_address)
+            gn_headers = {
+                'key': self.api_key,
+                'User-Agent': 'greynoise-redelk-enrichment'
+            }
+            gn_data = requests.get(f'{self.greynoise_url}{ip_address}', headers=gn_headers)
             json_result = gn_data.json()
             result = {
                 'ip': ip_address,

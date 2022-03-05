@@ -2,7 +2,7 @@
 """
 Part of RedELK
 
-This script enriches rtops lines with data from initial Cobalt Strike beacon
+This script enriches rtops lines with data from initial Stage1 beacon
 
 Authors:
 - Outflank B.V. / Mark Bergman (@xychix)
@@ -16,16 +16,16 @@ from modules.helpers import es, get_initial_alarm_result, get_query, get_value
 
 info = {
     'version': 0.1,
-    'name': 'Enrich Cobalt Strike beacon data',
+    'name': 'Enrich Stage1 beacon data',
     'alarmmsg': '',
-    'description': 'This script enriches rtops lines with data from initial Cobalt Strike beacon',
+    'description': 'This script enriches rtops lines with data from initial stage1',
     'type': 'redelk_enrich',
-    'submodule': 'enrich_csbeacon'
+    'submodule': 'enrich_stage1'
 }
 
 
 class Module():
-    """ enrich cs beacon module """
+    """ enrich s1 beacon module """
     def __init__(self):
         self.logger = logging.getLogger(info['submodule'])
 
@@ -40,8 +40,8 @@ class Module():
         return ret
 
     def enrich_beacon_data(self):
-        """ Get all lines in rtops that have not been enriched yet (for CS) """
-        es_query = f'implant.id:* AND c2.program: cobaltstrike AND NOT c2.log.type:implant_newimplant AND NOT tags:{info["submodule"]}'
+        """ Get all lines in rtops that have not been enriched yet (for S1) """
+        es_query = f'implant.id:* AND c2.program: stage1 AND NOT c2.log.type:implant_newimplant AND NOT tags:{info["submodule"]}'
         not_enriched_results = get_query(es_query, size=10000, index='rtops-*')
 
         # Created a dict grouped by implant ID
@@ -71,8 +71,8 @@ class Module():
         return hits
 
     def get_initial_beacon_doc(self, implant_id):
-        """ Get the initial beacon document from cobaltstrike or return False if none found """
-        query = f'implant.id:{implant_id} AND c2.program: cobaltstrike AND c2.log.type:implant_newimplant'
+        """ Get the initial beacon document from stage1 or return False if none found """
+        query = f'implant.id:{implant_id} AND c2.program: stage1 AND c2.log.type:implant_newimplant'
         initial_beacon_doc = get_query(query, size=1, index='rtops-*')
         initial_beacon_doc = initial_beacon_doc[0] if len(initial_beacon_doc) > 0 else False
         self.logger.debug('Initial beacon line [%s]: %s', implant_id, initial_beacon_doc)

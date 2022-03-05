@@ -375,7 +375,7 @@
                     "esTypes": [
                         "ip"
                     ],
-                    "name": "client.nat.ip",
+                    "name": "client.cdn.ip",
                     "readFromDocValues": true,
                     "scripted": false,
                     "searchable": true,
@@ -387,7 +387,7 @@
                     "esTypes": [
                         "long"
                     ],
-                    "name": "client.nat.port",
+                    "name": "client.cdn.port",
                     "readFromDocValues": true,
                     "scripted": false,
                     "searchable": true,
@@ -990,7 +990,7 @@
                     "esTypes": [
                         "ip"
                     ],
-                    "name": "destination.nat.ip",
+                    "name": "destination.cdn.ip",
                     "readFromDocValues": true,
                     "scripted": false,
                     "searchable": true,
@@ -1002,7 +1002,7 @@
                     "esTypes": [
                         "long"
                     ],
-                    "name": "destination.nat.port",
+                    "name": "destination.cdn.port",
                     "readFromDocValues": true,
                     "scripted": false,
                     "searchable": true,
@@ -8669,11 +8669,16 @@
             "timeFieldName": "@timestamp",
             "title": ".siem-signals-*"
         },
+        "coreMigrationVersion": "7.16.3",
         "id": "195a3f00-d04f-11ea-9301-a30a04251ae9",
         "migrationVersion": {
-            "index-pattern": "7.6.0"
+            "index-pattern": "7.11.0"
         },
         "references": [],
+        "sort": [
+            1645363343565,
+            1305
+        ],
         "type": "index-pattern",
         "version": "1"
     }

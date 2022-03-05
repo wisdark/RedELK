@@ -9,7 +9,6 @@ Authors:
 - Lorenzo Bernardi (@fastlorenzo)
 """
 import logging
-import traceback
 
 from config import alarms
 
@@ -41,16 +40,10 @@ class Module():
         ret['info'] = info
         ret['fields'] = ['agent.hostname', '@timestamp', 'host.name', 'user.name', 'ioc.type', 'file.name', 'file.hash.md5', 'c2.message', 'alarm.alarm_filehash']
         ret['groupby'] = ['file.hash.md5']
-        try:
-            report = self.alarm_check()
-            ret['hits']['hits'] = report['hits']
-            ret['mutations'] = report['mutations']
-            ret['hits']['total'] = len(report['hits'])
-        except Exception as error:
-            stack_trace = traceback.format_exc()
-            ret['error'] = stack_trace
-            self.logger.exception(error)
-            raise
+        report = self.alarm_check()
+        ret['hits']['hits'] = report['hits']
+        ret['mutations'] = report['mutations']
+        ret['hits']['total'] = len(report['hits'])
         self.logger.info('finished running module. result: %s hits', ret['hits']['total'])
         return ret
 
@@ -219,7 +212,7 @@ class Module():
             # Loop through the hashes results
             for md5 in check_results[engine].keys():
                 if isinstance(check_results[engine][md5], type({})):
-                    if check_results[engine][md5]['result'] == 'newAlarm':
+                    if 'result' in check_results[engine][md5] and check_results[engine][md5]['result'] == 'newAlarm':
                         # If hash was already alarmed by an engine
                         if md5 in alarmed_hashes:
                             alarmed_hashes[md5][engine] = check_results[engine][md5]
