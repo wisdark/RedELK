@@ -69,7 +69,7 @@ echo "" >> $LOGFILE
 
 # Set relevant permissions for redelk user
 echo "[*] Setting dir permisisons for redelk user" | tee -a $LOGFILE
-chown -Rv redelk /var/log/redelk/ && chown -Rv www-data:redelk /var/www/html/c2logs && chown -Rv redelk /etc/redelk && chmod 775 /var/www/html/c2logs >> $LOGFILE 2>&1
+chown -Rv redelk /var/log/redelk/ && chown -Rv redelk:www-data /var/www/html/c2logs && chown -Rv redelk /etc/redelk && chmod 2755 /var/www/html/c2logs >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echo "[X] Could not set dir permissions for redelk user (Error Code: $ERROR)."
@@ -145,6 +145,15 @@ $CURL -X POST "https://redelk-kibana:5601/api/saved_objects/_import?overwrite=tr
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echo "[X] Could not install Kibana visualizations (Error Code: $ERROR)."
+fi
+echo "" >> $LOGFILE
+
+echo "[*] Installing Kibana maps" | tee -a $LOGFILE
+upcheck_kibana
+$CURL -X POST "https://redelk-kibana:5601/api/saved_objects/_import?overwrite=true" -H 'kbn-xsrf: true' -F file=@./root/redelkinstalldata/templates/redelk_kibana_map.ndjson >> $LOGFILE 2>&1
+ERROR=$?
+if [ $ERROR -ne 0 ]; then
+    echo "[X] Could not install Kibana maps (Error Code: $ERROR)."
 fi
 echo "" >> $LOGFILE
 

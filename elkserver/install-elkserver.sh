@@ -483,6 +483,13 @@ if [ ${WHATTOINSTALL} = "full" ]; then
     fi
 fi
 
+echo "[*] Setting permissions on redelk base cron job" | tee -a $LOGFILE
+chmod 600 ./mounts/redelk-config/etc/cron.d/redelk >> $LOGFILE 2>&1
+ERROR=$?
+if [ $ERROR -ne 0 ]; then
+    echo "[X] Could not set permissions on redelk base cron (Error Code: $ERROR)." | tee -a $LOGFILE
+fi
+
 echo "[*] Setting permissions on logstash configs" | tee -a $LOGFILE
 chown -R 1000 ./mounts/logstash-config/* >> $LOGFILE 2>&1
 ERROR=$?
@@ -498,7 +505,7 @@ if [ $ERROR -ne 0 ]; then
 fi
 
 echo "[*] Setting permissions on redelk www data" | tee -a $LOGFILE
-chown -R 1000 ./mounts/redelk-www && chmod 664 ./mounts/redelk-www/* >> $LOGFILE 2>&1
+chown -R 1000 ./mounts/redelk-www && chmod 755 ./mounts/redelk-www/* >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echo "[X] Could not set permissions on redelk www data (Error Code: $ERROR)." | tee -a $LOGFILE

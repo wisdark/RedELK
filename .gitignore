@@ -101,7 +101,8 @@ venv.bak/
 # mkdocs documentation
 /site
 
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 
 # mypy
 .mypy_cache/
@@ -131,3 +132,4 @@ redirs.tgz
 redirs/VERSION
 redirs/filebeat/*.crt
 sshkey/
+elkserver/mounts/logstash-config/certs_inputs/*

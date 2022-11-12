@@ -8,6 +8,7 @@
         "le_email": "",
         "staging": "0"
     },
+    "project_name":"redelk-project",
     "es_connection": ["https://elastic:{{ELASTIC_PASSWORD}}@redelk-elasticsearch:9200"],
     "notifications": {
         "email": {
@@ -52,6 +53,10 @@
         "alarm_backendalarm": {
             "enabled": true,
             "interval": 320
+        },
+        "alarm_manual": {
+            "enabled": false,
+            "interval": 300
         }
     },
     "enrich": {
