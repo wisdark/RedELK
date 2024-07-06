@@ -42,6 +42,15 @@ if [  ! -f $1 ];then
     exit 1
 fi >> $LOGFILE 2>&1
 
+
+echo "[*] Doing basic sanity check of openssl config file." | tee -a $LOGFILE
+grep -E "MODIFYME|dnsnameofyourredelkserver|someseconddnsname|123.123.123.123" $1 | grep -v "^#" >> $LOGFILE 2>&1
+ERROR=$?
+if [ $ERROR -eq 0 ]; then
+    echoerror "[X] Check your openssl config file, it fails basic sanity checks. (Error Code: $ERROR)."
+    exit 1
+fi
+
 echo ""
 echo "[*] Will generate TLS certificates for the following DNS names and/or IP addresses:" | tee -a $LOGFILE
 grep -E "^DNS\.|^IP\." certs/config.cnf
@@ -57,6 +66,14 @@ fi >> $LOGFILE 2>&1
 ERROR=$?
 if [ $ERROR -ne 0 ]; then
     echoerror "[X] Could not create ./certs directory (Error Code: $ERROR)."
+fi
+
+# recurse find files like $file.example, check if $file exists and if not copy $file.example to $file
+echo "[*] Creating config files form example files" | tee -a $LOGFILE
+find . -type f -name *.example | while read f; do if [ ! -f ${f%.*} ]; then cp -v "$f" "${f%.*}"; fi ; done >> $LOGFILE 2>&1
+ERROR=$?
+if [ $ERROR -ne 0 ]; then
+    echoerror "[X] Could not create config files from example files (Error Code: $ERROR)."
 fi
 
 echo "[*] Generating private key for CA" | tee -a $LOGFILE
